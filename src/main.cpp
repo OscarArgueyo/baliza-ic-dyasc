@@ -9,8 +9,8 @@
 WebServer server(80);
 
 //Enter your WiFi SSID and PASSWORD
-const char* ssid = "CloudersFibra";
-const char* password = "Clouders@123456";
+const char* ssid = "TeleCentro-81e1";
+const char* password = "RDMWEJNXMWY2";
 
 //===============================================================
 // This routine is executed when you open its IP in browser
