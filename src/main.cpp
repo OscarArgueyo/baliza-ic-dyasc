@@ -5,25 +5,25 @@
 #include <HTTPClient.h>
 #include <WebServer.h>
 
-#include "index.h"  //Web page header file
+#include <Adafruit_NeoPixel.h>
+  #include "index.h"  //Web page header file
 
 WebServer server(80);
+// Which pin on the Arduino is connected to the NeoPixels?
+#define PIN 14 // On Trinket or Gemma, suggest changing this to 1
 
-/*
+// How many NeoPixels are attached to the Arduino?
+#define NUMPIXELS 16 // Popular NeoPixel ring size
 
-SSID:	IplanLiv-181329-5Ghz
-Protocolo:	802.11ac
-Tipo de seguridad:	WPA2-Personal
-Banda de red:	5 GHz
-Canal de red:	36
-Servidores DNS IPv6:	fe80::1%26
-Dirección IPv4:	192.168.1.2
-Servidores DNS IPv4:	192.168.1.1
-Fabricante:	Realtek Semiconductor Corp.
-Descripción:	Realtek RTL8821CE 802.11ac PCIe Adapter
-Versión del controlador:	2023.58.731.2017
-Dirección física (MAC):	9C-30-5B-B6-02-A7
-*/
+// When setting up the NeoPixel library, we tell it how many pixels,
+// and which pin to use to send signals. Note that for older NeoPixel
+// strips you might need to change the third parameter -- see the
+// strandtest example for more information on possible values.
+Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
+
+#define DELAYVAL 500 // Time (in milliseconds) to pause between pixels
+
+/**/
 
 //Enter your WiFi SSID and PASSWORD
 //const char* ssid = "IplanLiv-181329-2.4GHz";
@@ -61,6 +61,9 @@ void setup(void){
   Serial.println();
   Serial.println("Booting Sketch...");
 
+  pinMode(14, OUTPUT);
+  pixels.clear(); 
+
 //ESP32 As access point IP: 192.168.4.1
   WiFi.mode(WIFI_AP); //Access Point mode
   WiFi.softAP("BalizaIC_A_B", "12345678");    //Password length minimum 8 char
@@ -91,6 +94,24 @@ void setup(void){
  
   server.begin();                  //Start server
   Serial.println("HTTP server started");
+}
+
+
+
+void changeLedLight(int r , int g, int b){
+
+   // Set all pixel colors to 'off'
+  // The first NeoPixel in a strand is #0, second is 1, all the way up
+  // to the count of pixels minus one.
+  for(int i=0; i<NUMPIXELS; i++) { // For each pixel...
+    // pixels.Color() takes RGB values, from 0,0,0 up to 255,255,255
+    // Here we're using a moderately bright green color:
+    pixels.setPixelColor(i, pixels.Color(r, g, b));
+    pixels.show();   // Send the updated pixel colors to the hardware.
+    delay(10); // Pause before next pass through loop
+  }
+
+  delay(1000);
 }
 
 void getTravisInfo(){
@@ -143,8 +164,32 @@ void getTravisInfo(){
   Serial.print(builds_0_id);
   Serial.print(":");
   Serial.println(builds_0_state);
+  String status_passed = "passed";
+  String status_started = "started";
+  String status_failed = "failed";
+  String status_canceled = "canceled";
+  if(status_passed.equals(builds_0_state)){
+    changeLedLight(0, 255, 0);
+    Serial.println("Esta en passed!");
+  }
+
+  if(status_started.equals(builds_0_state)){
+    changeLedLight(255,255,0);
+    Serial.println("Esta en started!");
+  }
+
+  if(status_canceled.equals(builds_0_state)){
+    changeLedLight(192,192,192);
+    Serial.println("Esta en canceled!");
+  }
+  
+  if(status_failed.equals(builds_0_state)){
+    changeLedLight(255,0,0);
+    Serial.println("Esta en failed!");
+  }
 
 }
+
 
 //===============================================================
 // This routine is executed when you open its IP in browser
@@ -152,6 +197,6 @@ void getTravisInfo(){
 void loop(void){
   server.handleClient();
   getTravisInfo();
-
-  delay(1000);
+  //changeLedLight();
+  delay(300);
 }
