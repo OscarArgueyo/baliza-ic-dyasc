@@ -26,10 +26,10 @@ Dirección física (MAC):	9C-30-5B-B6-02-A7
 */
 
 //Enter your WiFi SSID and PASSWORD
-const char* ssid = "IplanLiv-181329-2.4GHz";
-//const char* ssid = "TeleCentro-81e1";
-const char* password = "37226269";
-//const char* password = "RDMWEJNXMWY2";
+//const char* ssid = "IplanLiv-181329-2.4GHz";
+const char* ssid = "TeleCentro-81e1";
+//const char* password = "37226269";
+const char* password = "RDMWEJNXMWY2";
 
 int status = WL_IDLE_STATUS;
 // if you don't want to use DNS (and reduce your sketch size)
@@ -94,65 +94,57 @@ void setup(void){
 }
 
 void getTravisInfo(){
-  client.setTimeout(10000);
-  if (!client.connect("api.travis-ci.org", 80)) {
-    Serial.println(F("Connection failed"));
-    return;
+
+  String payload;
+
+  if ((WiFi.status() == WL_CONNECTED)) { //Check the current connection status
+ 
+    HTTPClient http;
+ 
+    http.begin("https://api.travis-ci.org/repo/25849455/builds?limit=1"); //Specify the URL
+    http.addHeader("Travis-API-Version", "3");
+    http.setAuthorization("token sN-LuhyiLh61-Ya2zK-2Xw");
+    
+    int httpCode = http.GET();  //Make the request
+ 
+    if (httpCode > 0) { //Check for the returning code
+
+      payload = http.getString();
+      Serial.print("Status Code: ");
+      Serial.println(httpCode);
+      //Serial.println(payload);
+    }
+    else {
+      Serial.println("Error on HTTP request");
+    }
+
+    http.end(); //Free the resources
   }
-
-  Serial.println(F("Connected!"));
-
-  // Send HTTP request
-  client.println(F("GET /repos HTTP/1.0"));
-  client.println(F("Host: api.travis-ci.org"));
-  client.println(F("User-Agent: API Explorer"));
-  client.println(F("Authorization: token pQ4GsR2ok8LmbhzmC7a2cA"));
-  client.println(F("Travis-API-Version: 3"));
-  if (client.println() == 0) {
-    Serial.println(F("Failed to send request"));
-    return;
-  }
-
-  // Check HTTP status
-  char status[32] = {0};
-  client.readBytesUntil('\r', status, sizeof(status));
-  if (strcmp(status, "HTTP/1.1 200 OK") != 0) {
-    Serial.print(F("Unexpected response: "));
-    Serial.println(status);
-    return;
-  }
-
-  // Skip HTTP headers
-  char endOfHeaders[] = "\r\n\r\n";
-  if (!client.find(endOfHeaders)) {
-    Serial.println(F("Invalid response"));
-    return;
-  }
-
+  
   // Allocate the JSON document
   // Use arduinojson.org/v6/assistant to compute the capacity.
-  const size_t capacity = JSON_OBJECT_SIZE(3) + JSON_ARRAY_SIZE(2) + 60;
+  const size_t capacity = JSON_ARRAY_SIZE(0) + 2*JSON_ARRAY_SIZE(1) + 4*JSON_OBJECT_SIZE(3) + 2*JSON_OBJECT_SIZE(4) + 3*JSON_OBJECT_SIZE(5) + JSON_OBJECT_SIZE(6) + JSON_OBJECT_SIZE(8) + JSON_OBJECT_SIZE(9) + JSON_OBJECT_SIZE(23) + 1540;
+  
   DynamicJsonDocument doc(capacity);
 
   // Parse JSON object
-  DeserializationError error = deserializeJson(doc, client);
+  DeserializationError error = deserializeJson(doc, payload);
   if (error) {
     Serial.print(F("deserializeJson() failed: "));
     Serial.println(error.c_str());
     return;
   }
-
+  JsonObject builds_0 = doc["builds"][0];
+  const char* builds_0_state = builds_0["state"]; // "passed"
+  long builds_0_id = builds_0["id"]; // 595914427 
   // Extract values
-  Serial.println(F("Response:"));
-  Serial.println(doc["sensor"].as<char*>());
-  Serial.println(doc["time"].as<long>());
-  Serial.println(doc["data"][0].as<float>(), 6);
-  Serial.println(doc["data"][1].as<float>(), 6);
 
-  // Disconnect
-  client.stop();
+  Serial.println(F("Estado del ultimo build:"));
+  Serial.print(builds_0_id);
+  Serial.print(":");
+  Serial.println(builds_0_state);
+
 }
-
 
 //===============================================================
 // This routine is executed when you open its IP in browser
@@ -161,29 +153,5 @@ void loop(void){
   server.handleClient();
   getTravisInfo();
 
-  if ((WiFi.status() == WL_CONNECTED)) { //Check the current connection status
- 
-    HTTPClient http;
- 
-    http.begin("https://api.travis-ci.org/repos"); //Specify the URL
-    http.addHeader("Travis-API-Version", "3");
-    
-    http.setAuthorization("token sN-LuhyiLh61-Ya2zK-2Xw");
-    
-    int httpCode = http.GET();  //Make the request
- 
-    if (httpCode > 0) { //Check for the returning code
- 
-        String payload = http.getString();
-        Serial.println(httpCode);
-        Serial.println(payload);
-      }
- 
-    else {
-      Serial.println("Error on HTTP request");
-    }
- 
-    http.end(); //Free the resources
-  }
   delay(1000);
 }
