@@ -2,15 +2,34 @@
 #include <ArduinoJson.h>
 #include <WiFi.h>
 #include <WiFiClient.h>
+#include <HTTPClient.h>
 #include <WebServer.h>
 
 #include "index.h"  //Web page header file
 
 WebServer server(80);
 
+/*
+
+SSID:	IplanLiv-181329-5Ghz
+Protocolo:	802.11ac
+Tipo de seguridad:	WPA2-Personal
+Banda de red:	5 GHz
+Canal de red:	36
+Servidores DNS IPv6:	fe80::1%26
+Dirección IPv4:	192.168.1.2
+Servidores DNS IPv4:	192.168.1.1
+Fabricante:	Realtek Semiconductor Corp.
+Descripción:	Realtek RTL8821CE 802.11ac PCIe Adapter
+Versión del controlador:	2023.58.731.2017
+Dirección física (MAC):	9C-30-5B-B6-02-A7
+*/
+
 //Enter your WiFi SSID and PASSWORD
-const char* ssid = "TeleCentro-81e1";
-const char* password = "RDMWEJNXMWY2";
+const char* ssid = "IplanLiv-181329-2.4GHz";
+//const char* ssid = "TeleCentro-81e1";
+const char* password = "37226269";
+//const char* password = "RDMWEJNXMWY2";
 
 int status = WL_IDLE_STATUS;
 // if you don't want to use DNS (and reduce your sketch size)
@@ -22,6 +41,7 @@ char web[] = "www.google.com";    // name address for Google (using DNS)
 // with the IP address and port of the server
 // that you want to connect to (port 80 is default for HTTP):
 WiFiClient client;
+HTTPClient httpClient;
 
 
 //===============================================================
@@ -140,5 +160,30 @@ void getTravisInfo(){
 void loop(void){
   server.handleClient();
   getTravisInfo();
+
+  if ((WiFi.status() == WL_CONNECTED)) { //Check the current connection status
+ 
+    HTTPClient http;
+ 
+    http.begin("https://api.travis-ci.org/repos"); //Specify the URL
+    http.addHeader("Travis-API-Version", "3");
+    
+    http.setAuthorization("token sN-LuhyiLh61-Ya2zK-2Xw");
+    
+    int httpCode = http.GET();  //Make the request
+ 
+    if (httpCode > 0) { //Check for the returning code
+ 
+        String payload = http.getString();
+        Serial.println(httpCode);
+        Serial.println(payload);
+      }
+ 
+    else {
+      Serial.println("Error on HTTP request");
+    }
+ 
+    http.end(); //Free the resources
+  }
   delay(1000);
 }
