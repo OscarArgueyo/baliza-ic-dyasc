@@ -5,6 +5,8 @@
 #include <HTTPClient.h>
 #include <WebServer.h>
 
+#include <WifiManager.hpp>
+
 #include <Adafruit_NeoPixel.h>
   #include "index.h"  //Web page header file
 
@@ -60,7 +62,8 @@ void setup(void){
   Serial.begin(115200);
   Serial.println();
   Serial.println("Booting Sketch...");
-
+  WifiManager* wifimanager = new WifiManager();
+  wifimanager.setup();
   pinMode(14, OUTPUT);
   pixels.clear(); 
 
