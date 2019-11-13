@@ -45,7 +45,7 @@ boolean WIFI_SUCCESSFUL_CONNECTION = false;
 
 // -- When CONFIG_PIN is pulled to ground on startup, the Thing will use the initial
 //      password to buld an AP. (E.g. in case of lost password)
-#define CONFIG_PIN 17
+#define CONFIG_PIN 13
 
 // -- Status indicator pin.
 //      First it will light up (kept LOW), on Wifi connection it will blink,
@@ -263,7 +263,8 @@ void setup()
   Serial.println("Lista la baliza.");
 
   pinMode(PIN, OUTPUT);
-  pixels.clear(); 
+  pixels.clear();
+  changeLedLight(192,192,192);
 }
 
 void loop() 
