@@ -41,7 +41,7 @@ boolean WIFI_SUCCESSFUL_CONNECTION = false;
 #define NUMBER_LEN 32
 
 // -- Configuration specific key. The value should be modified if config structure was changed.
-#define CONFIG_VERSION "dem2"
+#define CONFIG_VERSION "untref"
 
 // -- When CONFIG_PIN is pulled to ground on startup, the Thing will use the initial
 //      password to buld an AP. (E.g. in case of lost password)
@@ -55,6 +55,8 @@ boolean WIFI_SUCCESSFUL_CONNECTION = false;
 // -- Callback method declarations.
 void configSaved();
 boolean formValidator();
+
+String current_state = "";
 
 DNSServer dnsServer;
 WebServer server(80);
@@ -73,6 +75,10 @@ IotWebConfParameter iCServerTokenParam = IotWebConfParameter("Token de Autentica
 IotWebConfSeparator separator3 = IotWebConfSeparator("Configuración del Dispositivo");
 IotWebConfParameter pollingFrequencyParam = IotWebConfParameter("Periodo de Actualización (en segundos)", "pollingFrequencyParam", pollingFrequencyParamValue, NUMBER_LEN, "number", "1..3600", NULL, "min='1' max='3600' step='1'");
 
+String status_passed = "passed";
+String status_started = "started";
+String status_failed = "failed";
+String status_canceled = "canceled";
 
 /**
  * Handle web requests to "/" path.
@@ -88,7 +94,7 @@ void handleRoot()
 
   // -- HTML page fragments
   String config_page  = "<!DOCTYPE html><html lang=\"en\"><head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1, user-scalable=no\"/><title>{v}</title>";
-  config_page += "<styles>.de{background-color:#ffaaaa;} .em{font-size:0.8em;color:#bb0000;padding-bottom:0px;} .c{text-align: center;} div,input{padding:5px;font-size:1em;} input{width:95%;} body{text-align: center;font-family:verdana;} button{border:0;border-radius:0.3rem;background-color:#16A1E7;color:#fff;line-height:2.4rem;font-size:1.2rem;width:100%;} fieldset{border-radius:0.3rem;margin: 0px;}</styles>";
+  config_page += "<style>.de{background-color:#ffaaaa;} .em{font-size:0.8em;color:#bb0000;padding-bottom:0px;} .c{text-align: center;} div,input{padding:5px;font-size:1em;} input{width:95%;} body{text-align: center;font-family:verdana;} button{border:0;border-radius:0.3rem;background-color:#16A1E7;color:#fff;line-height:2.4rem;font-size:1.2rem;width:100%;} fieldset{border-radius:0.3rem;margin: 0px;}</style>";
   config_page += "<script>function c(l){document.getElementById('s').value=l.innerText||l.textContent;document.getElementById('p').focus();}</script>";
   config_page += "</head><body>";
   config_page += "<div style='text-align:left;display:inline-block;min-width:260px;'>";
@@ -139,11 +145,28 @@ boolean formValidator()
   return valid;
 }
 
-void changeLedLight(int r , int g, int b){
+
+void changeLedLight(int r , int g, int b , int blink_times){
 
    // Set all pixel colors to 'off'
   // The first NeoPixel in a strand is #0, second is 1, all the way up
   // to the count of pixels minus one.
+  if(blink_times > 0){
+    while(blink_times > 0){
+        for(int i=0; i<NUMPIXELS; i++) { // For each pixel...
+          // pixels.Color() takes RGB values, from 0,0,0 up to 255,255,255
+          // Here we're using a moderately bright green color:
+          pixels.setPixelColor(i, pixels.Color(r, g, b));
+          pixels.show();   // Send the updated pixel colors to the hardware.
+          delay(10); // Pause before next pass through loop 
+        }
+      delay(100)
+      pixels.clear();
+      blink_times=blink_times-1; 
+    }    
+  }
+
+
   for(int i=0; i<NUMPIXELS; i++) { // For each pixel...
     // pixels.Color() takes RGB values, from 0,0,0 up to 255,255,255
     // Here we're using a moderately bright green color:
@@ -197,30 +220,18 @@ void getTravisInfo(){
     Serial.print(builds_0_id);
     Serial.print(":");
     Serial.println(builds_0_state);
-    String status_passed = "passed";
-    String status_started = "started";
-    String status_failed = "failed";
-    String status_canceled = "canceled";
-    
-    if(status_passed.equals(builds_0_state)){
-      changeLedLight(0, 255, 0);
-      Serial.println("Esta en passed!");
+
+    if(current_state.equals("")){
+      current_state = builds_0_state;
+    }
+    else{
+      if(!current_state.equals(builds_0_state)){
+        change_state(current_state,3);
+      }
     }
 
-    if(status_started.equals(builds_0_state)){
-      changeLedLight(255,255,0);
-      Serial.println("Esta en started!");
-    }
+    change_state(builds_0_state , 0);
 
-    if(status_canceled.equals(builds_0_state)){
-      changeLedLight(192,192,192);
-      Serial.println("Esta en canceled!");
-    }
-    
-    if(status_failed.equals(builds_0_state)){
-      changeLedLight(255,0,0);
-      Serial.println("Esta en failed!");
-    }
   }
   else {
     Serial.println("Error on HTTP request");
@@ -230,12 +241,56 @@ void getTravisInfo(){
 }
 
 
+void change_state(String build_0_state , int blink_state){
+
+  if(status_passed.equals(builds_0_state)){
+    changeLedLight(0, 255, 0 ,blink_state);
+    Serial.println("Esta en passed!");
+  }
+
+  if(status_started.equals(builds_0_state)){
+    changeLedLight(255,255,0 ,blink_state);
+    Serial.println("Esta en started!");
+  }
+
+  if(status_canceled.equals(builds_0_state)){
+    changeLedLight(192,192,192 ,blink_state);
+    Serial.println("Esta en canceled!");
+  }
+  
+  if(status_failed.equals(builds_0_state)){
+    changeLedLight(255,0,0,blink_state);
+    Serial.println("Esta en failed!");
+  }
+}
+
+void initial_state_light(){
+  Serial.println("Lista la baliza.");
+  pixels.clear();
+  changeLedLight(192,192,192,0);
+}
+
+
+void set_light_in_no_connection_mode(){
+
+  changeLedLight(247,94,37,0);
+}
+
+void failedWifiConnection(){
+
+  if(iotWebConf.getState() != 4){
+    Serial.println("No tengo conexion a wifi");
+    set_light_in_no_connection_mode();
+  } 
+}
 
 void setup() 
 {
   Serial.begin(115200);
   Serial.println();
   Serial.println("Starting up...");
+  pinMode(PIN, OUTPUT);
+
 
   iotWebConf.setStatusPin(STATUS_PIN);
   iotWebConf.setConfigPin(CONFIG_PIN);
@@ -248,11 +303,13 @@ void setup()
   iotWebConf.setFormValidator(&formValidator);
   iotWebConf.getApTimeoutParameter()->visible = true;
 
+
   // -- Initializing the configuration.
   boolean validConfig = iotWebConf.init();
   if (!validConfig)
   {
     icEndpointParamValue[0] = '\0';
+    pollingFrequencyParamValue[0] = '4';
   }
 
   // -- Set up required URL handlers on the web server.
@@ -260,22 +317,17 @@ void setup()
   server.on("/config", []{ iotWebConf.handleConfig(); });
   server.onNotFound([](){ iotWebConf.handleNotFound(); });
 
-  Serial.println("Lista la baliza.");
-
-  pinMode(PIN, OUTPUT);
-  pixels.clear();
-  changeLedLight(192,192,192);
+  initial_state_light();
+  getTravisInfo();
 }
 
 void loop() 
 {
-  // -- doLoop should be called as frequently as possible.
-
   iotWebConf.doLoop();
-
   getTravisInfo();
+  failedWifiConnection();
   //changeLedLight();
   String delay_str = String(pollingFrequencyParamValue);
-  //iotWebConf.delay(delay_str.toInt()*1000);
-  delay(1000);
+  delay(delay_str.toInt()*1000);
+
 }
