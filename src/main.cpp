@@ -56,7 +56,7 @@ boolean WIFI_SUCCESSFUL_CONNECTION = false;
 void configSaved();
 boolean formValidator();
 
-String current_state = "";
+String current_state = String("");
 
 DNSServer dnsServer;
 WebServer server(80);
@@ -160,7 +160,7 @@ void changeLedLight(int r , int g, int b , int blink_times){
           pixels.show();   // Send the updated pixel colors to the hardware.
           delay(10); // Pause before next pass through loop 
         }
-      delay(100)
+      delay(1000);
       pixels.clear();
       blink_times=blink_times-1; 
     }    
@@ -177,6 +177,30 @@ void changeLedLight(int r , int g, int b , int blink_times){
 
   delay(1000);
 }
+
+void change_state(String builds_0_state , int blink_state){
+
+  if(status_passed.equals(builds_0_state)){
+    changeLedLight(0, 255, 0 ,blink_state);
+    Serial.println("Esta en passed!");
+  }
+
+  if(status_started.equals(builds_0_state)){
+    changeLedLight(255,255,0 ,blink_state);
+    Serial.println("Esta en started!");
+  }
+
+  if(status_canceled.equals(builds_0_state)){
+    changeLedLight(192,192,192 ,blink_state);
+    Serial.println("Esta en canceled!");
+  }
+  
+  if(status_failed.equals(builds_0_state)){
+    changeLedLight(255,0,0,blink_state);
+    Serial.println("Esta en failed!");
+  }
+}
+
 
 void getTravisInfo(){
 
@@ -220,17 +244,19 @@ void getTravisInfo(){
     Serial.print(builds_0_id);
     Serial.print(":");
     Serial.println(builds_0_state);
-
+    
     if(current_state.equals("")){
-      current_state = builds_0_state;
+      current_state = String(builds_0_state);
     }
     else{
       if(!current_state.equals(builds_0_state)){
         change_state(current_state,3);
+        Serial.println("Parpadeo 3 veces");
       }
+
     }
 
-    change_state(builds_0_state , 0);
+    change_state(String(builds_0_state) , 0);
 
   }
   else {
@@ -241,28 +267,6 @@ void getTravisInfo(){
 }
 
 
-void change_state(String build_0_state , int blink_state){
-
-  if(status_passed.equals(builds_0_state)){
-    changeLedLight(0, 255, 0 ,blink_state);
-    Serial.println("Esta en passed!");
-  }
-
-  if(status_started.equals(builds_0_state)){
-    changeLedLight(255,255,0 ,blink_state);
-    Serial.println("Esta en started!");
-  }
-
-  if(status_canceled.equals(builds_0_state)){
-    changeLedLight(192,192,192 ,blink_state);
-    Serial.println("Esta en canceled!");
-  }
-  
-  if(status_failed.equals(builds_0_state)){
-    changeLedLight(255,0,0,blink_state);
-    Serial.println("Esta en failed!");
-  }
-}
 
 void initial_state_light(){
   Serial.println("Lista la baliza.");
@@ -318,6 +322,7 @@ void setup()
   server.onNotFound([](){ iotWebConf.handleNotFound(); });
 
   initial_state_light();
+  iotWebConf.doLoop();
   getTravisInfo();
 }
 
