@@ -44,7 +44,7 @@ boolean WIFI_SUCCESSFUL_CONNECTION = false;
 #define CONFIG_VERSION "untref"
 
 // -- When CONFIG_PIN is pulled to ground on startup, the Thing will use the initial
-//      password to buld an AP. (E.g. in case of lost password)
+//      password to buld an AP. (E.g. in case of lost password)COM
 #define CONFIG_PIN 13
 
 // -- Status indicator pin.
@@ -257,6 +257,7 @@ void getTravisInfo(){
     }
 
     change_state(String(builds_0_state) , 0);
+    current_state = String(builds_0_state);
 
   }
   else {
@@ -288,7 +289,7 @@ void failedWifiConnection(){
   } 
 }
 
-void setup() 
+void setup2() 
 {
   Serial.begin(115200);
   Serial.println();
@@ -326,7 +327,7 @@ void setup()
   getTravisInfo();
 }
 
-void loop() 
+void loopa() 
 {
   iotWebConf.doLoop();
   getTravisInfo();
