@@ -1,12 +1,4 @@
-#include <Arduino.h>
-#include <ArduinoJson.h>
-#include <IotWebConf.h>
-#include <HTTPClient.h>
-#include <WifiManager.hpp>
-
-#include <Adafruit_NeoPixel.h>
-
-
+/*
 // Which pin on the Arduino is connected to the NeoPixels?
 #define PIN 14 // On Trinket or Gemma, suggest changing this to 1
 
@@ -21,7 +13,7 @@ Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
 #define DELAYVAL 500 // Time (in milliseconds) to pause between pixels
 
-/**/
+/*
 
 //Enter your WiFi SSID and PASSWORD
 //const char* ssid = "IplanLiv-181329-2.4GHz";
@@ -55,7 +47,7 @@ boolean WIFI_SUCCESSFUL_CONNECTION = false;
 // -- Callback method declarations.
 void configSaved();
 boolean formValidator();
-
+/*
 String current_state = String("");
 
 DNSServer dnsServer;
@@ -82,7 +74,7 @@ String status_canceled = "canceled";
 
 /**
  * Handle web requests to "/" path.
- */
+ 
 void handleRoot()
 {
   // -- Let IotWebConf test and handle captive portal requests.
@@ -114,7 +106,7 @@ void handleRoot()
   s += "</ul>";
   s += "Go to <a href='config'>configure page</a> to change values.";
   s += "</body></html>\n";
-  */
+  
 
   server.send(200, "text/html", config_page);
 }
@@ -337,3 +329,5 @@ void loopa()
   delay(delay_str.toInt()*1000);
 
 }
+
+*/

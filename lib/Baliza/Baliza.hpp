@@ -3,14 +3,14 @@
 
 #include "Arduino.h"
 #include "LightManager.hpp"
-//#include "WifiManager.hpp"
+#include "WifiManager.hpp"
 //#include "CIManager.hpp"
 
 class Baliza
 {
 private:
     LightManager* lightManager;
-    //WifiManager wifiManager;
+    WifiManager* wifiManager;
     //CIManager ciManager;
     String status_passed = "passed";
     String status_started = "started";

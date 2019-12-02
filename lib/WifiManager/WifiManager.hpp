@@ -1,15 +1,16 @@
 #ifndef WifiManager_HPP
 #define WifiManager_HPP
 
+#include <WifiManager.hpp>
 #include "Arduino.h"
 #include <IotWebConf.h>
 #include <HTTPClient.h>
-#include <WifiManager.hpp>
+
 
 class WifiManager
 {
 private:
-
+    IotWebConf* iotWebConf;
 public:
     WifiManager();
  
@@ -21,6 +22,8 @@ public:
     void handleRoot();
     void configSaved();
     void wifiConnected();
+    boolean formValidator();
+
 
 };
  

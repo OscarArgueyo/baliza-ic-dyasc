@@ -1,56 +1,96 @@
 #include <Arduino.h>
 #include <WifiManager.hpp>
 
-/*
+// -- Initial name of the Thing. Used e.g. as SSID of the own Access Point.
+const char thingName[] = "BALIZA";
+
+// -- Initial password to connect to the Thing, when it creates an own Access Point.
+const char wifiInitialApPassword[] = "dyasc2019";
+
+boolean WIFI_SUCCESSFUL_CONNECTION = false;
+
+#define STRING_LEN 255
+#define NUMBER_LEN 32
+
+// -- Configuration specific key. The value should be modified if config structure was changed.
+#define CONFIG_VERSION "untref"
+
+// -- When CONFIG_PIN is pulled to ground on startup, the Thing will use the initial
+//      password to buld an AP. (E.g. in case of lost password)COM
+#define CONFIG_PIN 13
+
+// -- Status indicator pin.
+//      First it will light up (kept LOW), on Wifi connection it will blink,
+//      when connected to the Wifi it will turn off (kept HIGH).
+#define STATUS_PIN LED_BUILTIN
+
+String current_state = String("");
+
+DNSServer dnsServer;
+WebServer server(80);
+
+char icEndpointParamValue[STRING_LEN];
+char iCServerTokenParamValue[STRING_LEN];
+char pollingFrequencyParamValue[NUMBER_LEN];
+
+IotWebConfSeparator separator1 = IotWebConfSeparator("Servidor de Integracion Continua");
+IotWebConfParameter icEndpointParam = IotWebConfParameter("Endpoint API REST Integracion Continua ", "icEndpointParam", icEndpointParamValue, STRING_LEN);
+// -- We can add a legend to the separator
+IotWebConfSeparator separator2 = IotWebConfSeparator("Autenticación del Repositorio de IC");
+IotWebConfParameter iCServerTokenParam = IotWebConfParameter("Token de Autenticación", "iCServerTokenParam", iCServerTokenParamValue, STRING_LEN);
+
+IotWebConfSeparator separator3 = IotWebConfSeparator("Configuración del Dispositivo");
+IotWebConfParameter pollingFrequencyParam = IotWebConfParameter("Periodo de Actualización (en segundos)", "pollingFrequencyParam", pollingFrequencyParamValue, NUMBER_LEN, "number", "1..3600", NULL, "min='1' max='3600' step='1'");
+
+
+
 WifiManager::WifiManager(){
     Serial.println("Wifi Manager");
+    iotWebConf = new IotWebConf(thingName, &dnsServer, &server, wifiInitialApPassword, CONFIG_VERSION);
 }
 
 void WifiManager::setup(){
 
     Serial.println("ACA ESTAMOS");
-    IotWebConfSeparator separator1 = IotWebConfSeparator("Servidor de Integracion Continua");
-    IotWebConfParameter icEndpointParam = IotWebConfParameter("Endpoint API REST Integracion Continua ", "icEndpointParam", icEndpointParamValue, STRING_LEN);
-    // -- We can add a legend to the separator
-    IotWebConfSeparator separator2 = IotWebConfSeparator("Autenticación del Repositorio de IC");
-    IotWebConfParameter iCServerTokenParam = IotWebConfParameter("Token de Autenticación", "iCServerTokenParam", iCServerTokenParamValue, STRING_LEN);
+   
+    iotWebConf->setStatusPin(STATUS_PIN);
+    iotWebConf->setConfigPin(CONFIG_PIN);
+    iotWebConf->addParameter(&icEndpointParam);
+    iotWebConf->addParameter(&separator1);
+    iotWebConf->addParameter(&iCServerTokenParam);
+    iotWebConf->addParameter(&separator3);
+    iotWebConf->addParameter(&pollingFrequencyParam);
+    std::function<void(void)> cs = std::bind(&WifiManager::configSaved, this);
+    iotWebConf->setConfigSavedCallback(cs);
 
-    IotWebConfSeparator separator3 = IotWebConfSeparator("Configuración del Dispositivo");
-    IotWebConfParameter pollingFrequencyParam = IotWebConfParameter("Periodo de Actualización (en segundos)", "pollingFrequencyParam", pollingFrequencyParamValue, NUMBER_LEN, "number", "1..3600", NULL, "min='1' max='3600' step='1'");
-
-    iotWebConf.setStatusPin(STATUS_PIN);
-    iotWebConf.setConfigPin(CONFIG_PIN);
-    iotWebConf.addParameter(&icEndpointParam);
-    iotWebConf.addParameter(&separator1);
-    iotWebConf.addParameter(&iCServerTokenParam);
-    iotWebConf.addParameter(&separator3);
-    iotWebConf.addParameter(&pollingFrequencyParam);
-    iotWebConf.setConfigSavedCallback(&configSaved);
-    iotWebConf.setFormValidator(&formValidator);
-    iotWebConf.getApTimeoutParameter()->visible = true;
+    std::function<bool(void)> fv = std::bind(&WifiManager::formValidator, this);
+    iotWebConf->setFormValidator(fv);
+    iotWebConf->getApTimeoutParameter()->visible = true;
 
     // -- Initializing the configuration.
-    boolean validConfig = iotWebConf.init();
+    boolean validConfig = iotWebConf->init();
     if (!validConfig)
     {
         icEndpointParamValue[0] = '\0';
         pollingFrequencyParamValue[0] = '4';
     }
-
+    
     // -- Set up required URL handlers on the web server.
-    server.on("/", handleRoot);
-    server.on("/config", []{ iotWebConf.handleConfig(); });
-    server.onNotFound([](){ iotWebConf.handleNotFound(); });
+    server.on("/", [this] {
+         this->handleRoot();
+    });
+    server.on("/config", [this]{ this->iotWebConf->handleConfig(); });
+    server.onNotFound([this](){ this->iotWebConf->handleNotFound(); });
 
-    initial_state_light();
-    iotWebConf.doLoop();
+    //initial_state_light();
+    iotWebConf->doLoop();
 
 }
 
 void WifiManager::handleRoot()
 {
     // -- Let IotWebConf test and handle captive portal requests.
-    if (iotWebConf.handleCaptivePortal())
+    if (iotWebConf->handleCaptivePortal())
     {
     // -- Captive portal request were already served.
     return;
@@ -77,7 +117,7 @@ void WifiManager::handleRoot()
     s += atof(floatParamValue);
     s += "</ul>";
     s += "Go to <a href='config'>configure page</a> to change values.";
-    s += "</body></html>\n";
+    s += "</body></html>\n";*/
     
 
     server.send(200, "text/html", config_page);
@@ -95,6 +135,21 @@ void WifiManager::wifiConnected()
 }
 
 void WifiManager::loop(){
-    iotWebConf.doLoop();
+    iotWebConf->doLoop();
 }
-*/
+
+
+boolean WifiManager::formValidator()
+{
+  Serial.println("Validating form.");
+  boolean valid = true;
+
+  int l = server.arg(icEndpointParam.getId()).length();
+  if (l < 3)
+  {
+    icEndpointParam.errorMessage = "Url invalida!";
+    valid = false;
+  }
+
+  return valid;
+}
