@@ -3,6 +3,7 @@
  
 const char* ssid = "IplanLiv-181329-2.4GHz";
 const char* password =  "37226269";
+
 Baliza baliza = Baliza();
 void setup() {
 
@@ -16,7 +17,7 @@ void setup() {
   }
  
   Serial.println("Connected to the WiFi network");
-baliza.setup();
+  baliza.setup();
 }
  
 void loop() {

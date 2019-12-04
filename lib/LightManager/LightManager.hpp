@@ -11,10 +11,13 @@ class LightManager
 {
 private:
     Adafruit_NeoPixel* pixels;
+    String color;
 public:
     LightManager(/* args */);
     ~LightManager();
     void setLight(int r, int g, int b , int blink_times);
+    void setColor(String value);
+    String getColor();
 };
 
 

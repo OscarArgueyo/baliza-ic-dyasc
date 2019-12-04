@@ -43,6 +43,7 @@ String Baliza::getBuildState(){
 void Baliza::checkActualState(){
     int blink = 0;
     String actualState = apiConfigurator->getState();
+
     if(!actualState.equals(apiConfigurator->getPreviousState())){
         blink = 3;
     }

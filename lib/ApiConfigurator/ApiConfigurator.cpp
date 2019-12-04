@@ -8,7 +8,6 @@
 ApiConfigurator::ApiConfigurator(){
     httpClient = new HTTPClient();
     previousState = "";
-    Serial.println("ACAAAAAAAA");
 }
 
 void ApiConfigurator::getTravisInfo(){
