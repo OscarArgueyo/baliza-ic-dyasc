@@ -27,8 +27,8 @@ void LightManager::setLight(int r , int g, int b , int blink_times){
   }
   this->setColor(String(color));
   if(blink_times > 0){
-      pixels->clear();
     while(blink_times > 0){
+      pixels->clear();
         for(int i=0; i<NUMPIXELS; i++) { // For each pixel...
           pixels->setPixelColor(i, pixels->Color(r, g, b));
           pixels->show();   // Send the updated pixel colors to the hardware.
