@@ -28,6 +28,7 @@ DeviceConfigurator::DeviceConfigurator(){
 
 void DeviceConfigurator::setup(){
     Serial.println("ACA ESTAMOS");
+    // SPIFFS.format();
     StaticJsonDocument<200> json;
 
     //read configuration from FS json
@@ -117,9 +118,9 @@ void DeviceConfigurator::setup(){
     //read updated parameters
     ci_url = String(custom_ci_url.getValue());
     token = String(custom_ci_token.getValue());
-    
     //save the custom parameters to FS
     if (shouldSaveConfig) {
+    this->setCICredentials(ci_url, token);
     Serial.println("saving config");
     StaticJsonDocument<200> json;
     json["ci_url"] = ci_url.c_str();

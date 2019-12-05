@@ -9,14 +9,14 @@ void setup() {
 
   Serial.begin(115200);
  
-  WiFi.begin(ssid, password);
+  // WiFi.begin(ssid, password);
  
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.println("Connecting to WiFi..");
-  }
+  // while (WiFi.status() != WL_CONNECTED) {
+  //   delay(500);
+  //   Serial.println("Connecting to WiFi..");
+  // }
  
-  Serial.println("Connected to the WiFi network");
+  // Serial.println("Connected to the WiFi network");
   baliza.setup();
 }
  

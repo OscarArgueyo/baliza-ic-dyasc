@@ -3,7 +3,7 @@
 
 #include "Arduino.h"
 #include "LightManager.hpp"
-#include "WifiManager.hpp"
+#include "DeviceConfigurator.hpp"
 #include "ApiConfigurator.hpp"
 //#include "CIManager.hpp"
 
@@ -11,8 +11,9 @@ class Baliza
 {
 private:
     LightManager* lightManager;
-    WifiManager* wifiManager;
+    DeviceConfigurator* deviceConfigurator;
     ApiConfigurator* apiConfigurator;
+    
     String state;
     String thingName = "BALIZA";
     String wifiInitialApPassword = "dyasc2019";
